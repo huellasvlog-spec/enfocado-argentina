@@ -78,19 +78,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Huellas Foto — Directorio de fotógrafos en Argentina" },
+      { title: "Enfocado — Fotógrafos y realizadores en Argentina" },
       {
         name: "description",
         content: "Directorio para contratar fotógrafos y videógrafos en todo el país.",
       },
-      { property: "og:title", content: "Huellas Foto" },
+      { property: "og:title", content: "Enfocado" },
       {
         property: "og:description",
         content: "Directorio para contratar fotógrafos y videógrafos en Argentina.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -108,7 +107,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es-AR">
       <head>
         <HeadContent />
       </head>

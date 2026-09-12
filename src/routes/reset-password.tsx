@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Nueva contraseña — Huellas Foto" },
+      { title: "Nueva contraseña — Enfocado" },
       { name: "description", content: "Definí una contraseña nueva para tu cuenta de fotógrafo." },
-      { property: "og:title", content: "Nueva contraseña — Huellas Foto" },
+      { property: "og:title", content: "Nueva contraseña — Enfocado" },
       { property: "og:description", content: "Restablecé el acceso a tu cuenta." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ResetPassword,

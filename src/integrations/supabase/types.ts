@@ -54,6 +54,7 @@ export type Database = {
           services: string[]
           updated_at: string
           video_url: string | null
+          video_urls: string[]
           website_url: string | null
           whatsapp: string
         }
@@ -72,6 +73,7 @@ export type Database = {
           services?: string[]
           updated_at?: string
           video_url?: string | null
+          video_urls?: string[]
           website_url?: string | null
           whatsapp?: string
         }
@@ -90,6 +92,7 @@ export type Database = {
           services?: string[]
           updated_at?: string
           video_url?: string | null
+          video_urls?: string[]
           website_url?: string | null
           whatsapp?: string
         }
