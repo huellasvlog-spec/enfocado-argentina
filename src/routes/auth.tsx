@@ -20,8 +20,8 @@ import {
 type Modo = "login" | "registro";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>): { modo?: Modo } => ({
-    modo: search['modo'] === "registro" ? "registro" : search['modo'] === "login" ? "login" : undefined,
+  validateSearch: (search: Record<string, unknown>): { modo: Modo } => ({
+    modo: search["modo"] === "registro" ? "registro" : "login",
   }),
   head: () => ({
     meta: [
