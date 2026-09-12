@@ -17,16 +17,24 @@ const optionalWebUrl = z
 
 export const externalLinksSchema = z.object({
   instagram: optionalWebUrl.refine(
-    (value) => !value || new URL(value).hostname.replace(/^www\./, "") === "instagram.com",
+    (value) => !value || safeHost(value) === "instagram.com",
     "Ingresá un enlace válido de Instagram",
   ),
   website: optionalWebUrl,
   creative: optionalWebUrl.refine((value) => {
     if (!value) return true;
-    const host = new URL(value).hostname.replace(/^www\./, "");
+    const host = safeHost(value);
     return host === "vimeo.com" || host === "behance.net";
   }, "Ingresá un enlace válido de Vimeo o Behance"),
 });
+
+function safeHost(value: string): string | null {
+  try {
+    return new URL(value).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
 
 export function parseVideoUrls(value: string): string[] | null {
   const urls = value
