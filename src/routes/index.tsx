@@ -107,7 +107,7 @@ function Index() {
               />
             </div>
             <Select value={provincia} onValueChange={setProvincia}>
-              <SelectTrigger className="sm:w-56" aria-label="Filtrar por provincia">
+              <SelectTrigger className="sm:w-56 text-foreground" aria-label="Filtrar por provincia">
                 <SelectValue placeholder="Provincia" />
               </SelectTrigger>
               <SelectContent>
@@ -120,7 +120,7 @@ function Index() {
               </SelectContent>
             </Select>
             <Select value={servicio} onValueChange={setServicio}>
-              <SelectTrigger className="sm:w-56" aria-label="Filtrar por servicio">
+              <SelectTrigger className="sm:w-56 text-foreground" aria-label="Filtrar por servicio">
                 <SelectValue placeholder="Servicio" />
               </SelectTrigger>
               <SelectContent>
