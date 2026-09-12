@@ -1,19 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Trash2, Upload, ExternalLink, FileText } from "lucide-react";
+import { Trash2, Upload, ExternalLink, FileText, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PROVINCIAS, SERVICIOS } from "@/lib/catalog";
 import { signPaths } from "@/lib/media";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { AvatarCropper } from "@/components/AvatarCropper";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { externalLinksSchema, parseVideoUrls } from "@/lib/profile-links";
+import { externalLinksSchema, parseVideoUrls, normalizeExternalUrl } from "@/lib/profile-links";
 import {
   Select,
   SelectContent,
@@ -54,6 +55,7 @@ function Panel() {
   const [creative, setCreative] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
 
   const { data: perfil } = useQuery({
@@ -108,7 +110,14 @@ function Panel() {
       toast.error("Revisá los enlaces de video. Usá hasta 8 enlaces de YouTube o Vimeo.");
       return;
     }
-    const links = externalLinksSchema.safeParse({ instagram, website, creative });
+    const normalizedInstagram = normalizeExternalUrl(instagram, "instagram");
+    const normalizedWebsite = normalizeExternalUrl(website, "website");
+    const normalizedCreative = normalizeExternalUrl(creative, "creative");
+    const links = externalLinksSchema.safeParse({
+      instagram: normalizedInstagram,
+      website: normalizedWebsite,
+      creative: normalizedCreative,
+    });
     if (!links.success) {
       toast.error(links.error.issues[0]?.message ?? "Revisá los enlaces externos.");
       return;
@@ -355,18 +364,38 @@ function Panel() {
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
           <h2 className="text-lg font-semibold">Foto de perfil o logo</h2>
           <div className="mt-3 flex items-center gap-4">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void subirAvatar(f);
-              }}
-              className="text-sm"
-              aria-label="Subir foto de perfil o logo"
-            />
+            {perfil?.avatar_url && urls[perfil.avatar_url] && (
+              <img
+                src={urls[perfil.avatar_url]}
+                alt="Foto de perfil actual"
+                className="h-20 w-20 rounded-full object-cover ring-2 ring-border"
+              />
+            )}
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
+              <Camera className="h-4 w-4" />
+              Subir foto
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setAvatarFile(f);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
           </div>
         </section>
+
+        <AvatarCropper
+          file={avatarFile}
+          onCancel={() => setAvatarFile(null)}
+          onConfirm={async (file) => {
+            await subirAvatar(file);
+            setAvatarFile(null);
+          }}
+        />
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
           <h2 className="text-lg font-semibold">Portfolio PDF</h2>

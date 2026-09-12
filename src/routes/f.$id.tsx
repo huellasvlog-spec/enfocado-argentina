@@ -7,6 +7,7 @@ import { signPaths } from "@/lib/media";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { WhatsAppModal } from "@/components/WhatsAppModal";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getVideoEmbedUrl } from "@/lib/profile-links";
@@ -33,6 +34,7 @@ function Perfil() {
   const [modal, setModal] = useState(false);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const { data: perfil, isLoading } = useQuery({
     queryKey: ["perfil-publico", id],
@@ -220,17 +222,22 @@ function Perfil() {
                 </p>
               ) : (
                 <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {(imagenes ?? []).map((img) => (
-                    <div key={img.id} className="overflow-hidden rounded-xl bg-muted">
+                  {(imagenes ?? []).map((img, i) => (
+                    <button
+                      key={img.id}
+                      type="button"
+                      onClick={() => setLightboxIndex(i)}
+                      className="overflow-hidden rounded-xl bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
                       {urls[img.storage_path] && (
                         <img
                           src={urls[img.storage_path]}
                           alt={`Trabajo de ${perfil.full_name}`}
-                          className="aspect-square w-full object-cover"
+                          className="aspect-square w-full cursor-zoom-in object-cover transition-transform duration-200 hover:scale-105"
                           loading="lazy"
                         />
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -241,6 +248,15 @@ function Perfil() {
               onOpenChange={setModal}
               nombre={perfil.full_name}
               whatsapp={perfil.whatsapp ?? ""}
+            />
+
+            <ImageLightbox
+              images={(imagenes ?? []).map((img) => ({
+                src: urls[img.storage_path] ?? "",
+                alt: `Trabajo de ${perfil.full_name}`,
+              }))}
+              index={lightboxIndex}
+              onIndexChange={setLightboxIndex}
             />
           </>
         )}
