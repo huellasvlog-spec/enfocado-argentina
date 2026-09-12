@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Trash2, Upload, ExternalLink } from "lucide-react";
+import { Trash2, Upload, ExternalLink, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PROVINCIAS, SERVICIOS } from "@/lib/catalog";
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { externalLinksSchema, parseVideoUrls } from "@/lib/profile-links";
 import {
   Select,
   SelectContent,
@@ -24,10 +25,12 @@ import {
 export const Route = createFileRoute("/_authenticated/panel")({
   head: () => ({
     meta: [
-      { title: "Mi panel — Huellas Foto" },
+      { title: "Mi panel — Enfocado" },
       { name: "description", content: "Editá tus datos, servicios, tarifa y portfolio." },
-      { property: "og:title", content: "Mi panel — Huellas Foto" },
+      { property: "og:title", content: "Mi panel — Enfocado" },
       { property: "og:description", content: "Panel privado del fotógrafo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Panel,
@@ -45,6 +48,10 @@ function Panel() {
   const [provincia, setProvincia] = useState("");
   const [servicios, setServicios] = useState<string[]>([]);
   const [tarifa, setTarifa] = useState("");
+  const [videoLinks, setVideoLinks] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [website, setWebsite] = useState("");
+  const [creative, setCreative] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const [urls, setUrls] = useState<Record<string, string>>({});
@@ -83,6 +90,10 @@ function Panel() {
     setProvincia(perfil.province ?? "");
     setServicios(perfil.services ?? []);
     setTarifa(perfil.price_text ?? "");
+    setVideoLinks((perfil.video_urls ?? []).join("\n"));
+    setInstagram(perfil.instagram_url ?? "");
+    setWebsite(perfil.website_url ?? "");
+    setCreative(perfil.creative_url ?? "");
   }, [perfil]);
 
   useEffect(() => {
@@ -92,6 +103,16 @@ function Panel() {
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
+    const videos = parseVideoUrls(videoLinks);
+    if (!videos) {
+      toast.error("Revisá los enlaces de video. Usá hasta 8 enlaces de YouTube o Vimeo.");
+      return;
+    }
+    const links = externalLinksSchema.safeParse({ instagram, website, creative });
+    if (!links.success) {
+      toast.error(links.error.issues[0]?.message ?? "Revisá los enlaces externos.");
+      return;
+    }
     setGuardando(true);
     const { error } = await supabase.from("photographers").upsert({
       id: user.id,
@@ -101,6 +122,10 @@ function Panel() {
       province: provincia,
       services: servicios,
       price_text: tarifa,
+      video_urls: videos,
+      instagram_url: links.data.instagram || null,
+      website_url: links.data.website || null,
+      creative_url: links.data.creative || null,
     });
     setGuardando(false);
     if (error) toast.error("No se pudieron guardar los cambios.");
@@ -111,6 +136,10 @@ function Panel() {
   }
 
   async function subirAvatar(file: File) {
+    if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) {
+      toast.error("Elegí una imagen de hasta 10 MB.");
+      return;
+    }
     const path = `${user.id}/avatar-${Date.now()}-${file.name.replace(/\s/g, "-")}`;
     const { error } = await supabase.storage.from("portfolio").upload(path, file);
     if (error) {
@@ -125,6 +154,10 @@ function Panel() {
   async function subirPortfolio(files: FileList) {
     setSubiendo(true);
     for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} debe ser una imagen de hasta 10 MB.`);
+        continue;
+      }
       const path = `${user.id}/${Date.now()}-${file.name.replace(/\s/g, "-")}`;
       const { error } = await supabase.storage.from("portfolio").upload(path, file);
       if (error) {
@@ -137,6 +170,35 @@ function Panel() {
     }
     setSubiendo(false);
     void qc.invalidateQueries({ queryKey: ["portfolio", user.id] });
+  }
+
+  async function subirPdf(file: File) {
+    if (file.type !== "application/pdf" || file.size > 10 * 1024 * 1024) {
+      toast.error("Elegí un PDF de hasta 10 MB.");
+      return;
+    }
+    setSubiendo(true);
+    const path = `${user.id}/portfolio-${Date.now()}.pdf`;
+    const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, file, {
+      contentType: "application/pdf",
+    });
+    if (uploadError) {
+      setSubiendo(false);
+      toast.error("No se pudo subir el PDF.");
+      return;
+    }
+    const previous = perfil?.portfolio_pdf_path;
+    const { error } = await supabase.from("photographers").upsert({ id: user.id, portfolio_pdf_path: path });
+    if (error) {
+      await supabase.storage.from("portfolio").remove([path]);
+      setSubiendo(false);
+      toast.error("No se pudo guardar el PDF.");
+      return;
+    }
+    if (previous) await supabase.storage.from("portfolio").remove([previous]);
+    setSubiendo(false);
+    void qc.invalidateQueries({ queryKey: ["perfil", user.id] });
+    toast.success("Portfolio PDF actualizado.");
   }
 
   async function borrarImagen(img: Imagen) {
@@ -236,13 +298,39 @@ function Panel() {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="videos">Videos de YouTube o Vimeo</Label>
+            <Textarea
+              id="videos"
+              rows={4}
+              value={videoLinks}
+              onChange={(e) => setVideoLinks(e.target.value)}
+              placeholder="Pegá un enlace por línea (máximo 8)"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="instagram">Instagram</Label>
+              <Input id="instagram" type="url" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="https://instagram.com/tuusuario" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="website">Sitio web personal</Label>
+              <Input id="website" type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://tusitio.com" />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="creative">Vimeo o Behance</Label>
+              <Input id="creative" type="url" value={creative} onChange={(e) => setCreative(e.target.value)} placeholder="https://vimeo.com/tuusuario" />
+            </div>
+          </div>
+
           <Button type="submit" disabled={guardando}>
             {guardando ? "Guardando…" : "Guardar cambios"}
           </Button>
         </form>
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
-          <h2 className="text-lg font-semibold">Foto de perfil</h2>
+          <h2 className="text-lg font-semibold">Foto de perfil o logo</h2>
           <div className="mt-3 flex items-center gap-4">
             <input
               type="file"
@@ -252,9 +340,22 @@ function Panel() {
                 if (f) void subirAvatar(f);
               }}
               className="text-sm"
-              aria-label="Subir foto de perfil"
+              aria-label="Subir foto de perfil o logo"
             />
           </div>
+        </section>
+
+        <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
+          <h2 className="text-lg font-semibold">Portfolio PDF</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Subí un archivo PDF de hasta 10 MB.</p>
+          <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
+            <FileText className="h-4 w-4" />
+            {perfil?.portfolio_pdf_path ? "Reemplazar PDF" : "Subir PDF"}
+            <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void subirPdf(file);
+            }} />
+          </label>
         </section>
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
