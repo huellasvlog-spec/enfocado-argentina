@@ -325,10 +325,11 @@ function Panel() {
               <Label htmlFor="instagram">Instagram</Label>
               <Input
                 id="instagram"
-                type="url"
+                type="text"
                 value={instagram}
                 onChange={(e) => setInstagram(e.target.value)}
-                placeholder="https://instagram.com/tuusuario"
+                onBlur={() => setInstagram(normalizeExternalUrl(instagram, "instagram"))}
+                placeholder="instagram.com/tuusuario o tuusuario"
                 maxLength={500}
               />
             </div>
@@ -336,10 +337,11 @@ function Panel() {
               <Label htmlFor="website">Sitio web personal</Label>
               <Input
                 id="website"
-                type="url"
+                type="text"
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
-                placeholder="https://tusitio.com"
+                onBlur={() => setWebsite(normalizeExternalUrl(website, "website"))}
+                placeholder="tusitio.com"
                 maxLength={500}
               />
             </div>
@@ -347,10 +349,11 @@ function Panel() {
               <Label htmlFor="creative">Vimeo o Behance</Label>
               <Input
                 id="creative"
-                type="url"
+                type="text"
                 value={creative}
                 onChange={(e) => setCreative(e.target.value)}
-                placeholder="https://vimeo.com/tuusuario"
+                onBlur={() => setCreative(normalizeExternalUrl(creative, "creative"))}
+                placeholder="vimeo.com/tuusuario"
                 maxLength={500}
               />
             </div>

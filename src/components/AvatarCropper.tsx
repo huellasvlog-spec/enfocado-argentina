@@ -24,6 +24,7 @@ export function AvatarCropper({ file, onCancel, onConfirm }: AvatarCropperProps)
   const imageRef = useRef<HTMLImageElement>(null);
   const pointerRef = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
   const [source, setSource] = useState("");
+  const MIN_ZOOM = 0.3;
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [saving, setSaving] = useState(false);
@@ -129,7 +130,7 @@ export function AvatarCropper({ file, onCancel, onConfirm }: AvatarCropperProps)
           </Label>
           <Slider
             id="avatar-zoom"
-            min={1}
+            min={MIN_ZOOM}
             max={3}
             step={0.05}
             value={[zoom]}
