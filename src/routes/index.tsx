@@ -7,6 +7,7 @@ import { PROVINCIAS, SERVICIOS } from "@/lib/catalog";
 import { signPaths } from "@/lib/media";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { AdPlaceholder } from "@/components/AdPlaceholder";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,17 +22,19 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Huellas Foto — Fotógrafos y videógrafos en Argentina" },
+      { title: "Enfocado — Fotógrafos y realizadores en Argentina" },
       {
         name: "description",
         content:
           "Buscá y contactá fotógrafos, videógrafos y pilotos de drone en todo el país. Filtrá por provincia y tipo de servicio.",
       },
-      { property: "og:title", content: "Huellas Foto — Fotógrafos en Argentina" },
+      { property: "og:title", content: "Enfocado — Fotógrafos y realizadores" },
       {
         property: "og:description",
         content: "Directorio de fotógrafos y videógrafos por provincia y servicio.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,
@@ -88,7 +91,7 @@ function Index() {
       <section className="bg-hero-gradient">
         <div className="mx-auto max-w-4xl px-4 py-14 text-center text-primary-foreground">
           <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
-            Encontrá al fotógrafo ideal en Argentina
+            Encontrá a tu realizador o fotógrafo en Enfocado
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm opacity-90 sm:text-base">
             Casamientos, eventos, retratos, producto, video y drones. Buscá por provincia y
@@ -136,7 +139,7 @@ function Index() {
         </div>
       </section>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-10">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
             {isLoading ? "Cargando…" : `${lista.length} fotógrafos disponibles`}
@@ -162,14 +165,15 @@ function Index() {
           </p>
         )}
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {lista.map((p) => (
-            <Link
-              key={p.id}
-              to="/f/$id"
-              params={{ id: p.id }}
-              className="group rounded-2xl border border-border bg-card p-5 shadow-card transition hover:-translate-y-0.5 hover:border-primary/40"
-            >
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_240px]">
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {lista.map((p, index) => (
+              <div key={p.id} className="contents">
+                <Link
+                  to="/f/$id"
+                  params={{ id: p.id }}
+                  className="group rounded-2xl border border-border bg-card p-5 shadow-card transition hover:-translate-y-0.5 hover:border-primary/40"
+                >
               <div className="flex items-center gap-3">
                 <div className="h-14 w-14 overflow-hidden rounded-full bg-muted">
                   {p.avatar_url && avatars[p.avatar_url] ? (
@@ -204,8 +208,18 @@ function Index() {
               <p className="mt-4 text-sm font-medium text-foreground">
                 {p.price_text || "A consultar"}
               </p>
-            </Link>
-          ))}
+                </Link>
+                {(index + 1) % 4 === 0 && index < lista.length - 1 && (
+                  <div className="sm:col-span-2 xl:col-span-3">
+                    <AdPlaceholder />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="hidden lg:sticky lg:top-24 lg:block">
+            <AdPlaceholder format="sidebar" />
+          </div>
         </div>
       </main>
 

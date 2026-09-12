@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { MapPin, MessageCircle } from "lucide-react";
+import { Download, Globe, Instagram, MapPin, MessageCircle, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { signPaths } from "@/lib/media";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -9,17 +9,20 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { WhatsAppModal } from "@/components/WhatsAppModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getVideoEmbedUrl } from "@/lib/profile-links";
 
 export const Route = createFileRoute("/f/$id")({
   head: () => ({
     meta: [
-      { title: "Perfil de fotógrafo — Huellas Foto" },
+      { title: "Perfil de fotógrafo — Enfocado" },
       {
         name: "description",
         content: "Mirá el portfolio, los servicios y la zona de trabajo de este fotógrafo.",
       },
-      { property: "og:title", content: "Perfil de fotógrafo — Huellas Foto" },
+      { property: "og:title", content: "Perfil de fotógrafo — Enfocado" },
       { property: "og:description", content: "Portfolio, servicios y contacto por WhatsApp." },
+      { property: "og:type", content: "profile" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Perfil,
@@ -29,13 +32,16 @@ function Perfil() {
   const { id } = Route.useParams();
   const [modal, setModal] = useState(false);
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const { data: perfil, isLoading } = useQuery({
     queryKey: ["perfil-publico", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("photographers")
-        .select("id, full_name, bio, province, services, price_text, whatsapp, avatar_url")
+        .select(
+          "id, full_name, bio, province, services, price_text, whatsapp, avatar_url, video_urls, portfolio_pdf_path, instagram_url, website_url, creative_url",
+        )
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -63,6 +69,17 @@ function Perfil() {
     ];
     if (paths.length) void signPaths(paths).then(setUrls);
   }, [imagenes, perfil]);
+
+  useEffect(() => {
+    if (!perfil?.portfolio_pdf_path) {
+      setPdfUrl(null);
+      return;
+    }
+    void supabase.storage
+      .from("portfolio")
+      .createSignedUrl(perfil.portfolio_pdf_path, 60 * 60, { download: true })
+      .then(({ data }) => setPdfUrl(data?.signedUrl ?? null));
+  }, [perfil?.portfolio_pdf_path]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -107,6 +124,54 @@ function Perfil() {
                     </Badge>
                   ))}
                 </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {perfil.instagram_url && (
+                    <Button asChild variant="outline" size="icon">
+                      <a
+                        href={perfil.instagram_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Ver Instagram"
+                        title="Instagram"
+                      >
+                        <Instagram className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  )}
+                  {perfil.website_url && (
+                    <Button asChild variant="outline" size="icon">
+                      <a
+                        href={perfil.website_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Visitar sitio web"
+                        title="Sitio web"
+                      >
+                        <Globe className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  )}
+                  {perfil.creative_url && (
+                    <Button asChild variant="outline" size="icon">
+                      <a
+                        href={perfil.creative_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Ver perfil de Vimeo o Behance"
+                        title="Vimeo o Behance"
+                      >
+                        <Play className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  )}
+                  {pdfUrl && (
+                    <Button asChild variant="outline" size="sm">
+                      <a href={pdfUrl} target="_blank" rel="noreferrer">
+                        <Download className="h-4 w-4" /> Descargar Portfolio / PDF
+                      </a>
+                    </Button>
+                  )}
+                </div>
               </div>
               <Button size="lg" onClick={() => setModal(true)}>
                 <MessageCircle className="mr-2 h-5 w-5" /> Contactar por WhatsApp
@@ -119,6 +184,31 @@ function Perfil() {
                 <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                   {perfil.bio}
                 </p>
+              </section>
+            )}
+
+            {(perfil.video_urls ?? []).length > 0 && (
+              <section className="mt-6">
+                <h2 className="text-lg font-semibold">Videos</h2>
+                <div className="mt-3 grid gap-4 md:grid-cols-2">
+                  {(perfil.video_urls ?? []).map((videoUrl) => {
+                    const embedUrl = getVideoEmbedUrl(videoUrl);
+                    if (!embedUrl) return null;
+                    return (
+                      <div key={videoUrl} className="aspect-video overflow-hidden rounded-lg bg-muted">
+                        <iframe
+                          src={embedUrl}
+                          title={`Video de ${perfil.full_name}`}
+                          className="h-full w-full"
+                          loading="lazy"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          allowFullScreen
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </section>
             )}
 

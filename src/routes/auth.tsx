@@ -25,13 +25,15 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "Ingresar o registrarse — Huellas Foto" },
+      { title: "Ingresar o registrarse — Enfocado" },
       {
         name: "description",
         content: "Creá tu cuenta de fotógrafo o iniciá sesión para editar tu perfil y portfolio.",
       },
-      { property: "og:title", content: "Ingresar o registrarse — Huellas Foto" },
+      { property: "og:title", content: "Ingresar o registrarse — Enfocado" },
       { property: "og:description", content: "Acceso para prestadores de servicios fotográficos." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,
@@ -55,7 +57,7 @@ function AuthPage() {
   const [mailReset, setMailReset] = useState("");
 
   useEffect(() => {
-    const guardado = localStorage.getItem("huellas_email");
+    const guardado = localStorage.getItem("enfocado_email") ?? localStorage.getItem("huellas_email");
     if (guardado) {
       setEmail(guardado);
       setRecordar(true);
@@ -71,8 +73,9 @@ function AuthPage() {
       toast.error("No pudimos iniciar sesión. Revisá el email y la contraseña.");
       return;
     }
-    if (recordar) localStorage.setItem("huellas_email", email);
-    else localStorage.removeItem("huellas_email");
+    if (recordar) localStorage.setItem("enfocado_email", email);
+    else localStorage.removeItem("enfocado_email");
+    localStorage.removeItem("huellas_email");
     navigate({ to: "/panel" });
   }
 
