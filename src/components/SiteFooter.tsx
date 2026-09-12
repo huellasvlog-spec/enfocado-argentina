@@ -71,15 +71,35 @@ export function SiteFooter() {
               <form onSubmit={sendFeedback} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="feedback-name">Nombre</Label>
-                  <Input id="feedback-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={100} required />
+                  <Input
+                    id="feedback-name"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    maxLength={100}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="feedback-email">Email</Label>
-                  <Input id="feedback-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={255} required />
+                  <Input
+                    id="feedback-email"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    maxLength={255}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="feedback-message">Mensaje</Label>
-                  <Textarea id="feedback-message" rows={5} value={message} onChange={(event) => setMessage(event.target.value)} maxLength={2000} required />
+                  <Textarea
+                    id="feedback-message"
+                    rows={5}
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value)}
+                    maxLength={2000}
+                    required
+                  />
                   <p className="text-right text-xs text-muted-foreground">{message.length}/2000</p>
                 </div>
                 <Button type="submit" className="w-full" disabled={sending}>
@@ -92,7 +112,7 @@ export function SiteFooter() {
             <DialogTrigger className="font-medium text-primary underline-offset-4 hover:underline">
               Términos y Condiciones
             </DialogTrigger>
-          <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-2xl">
+            <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Términos y Condiciones</DialogTitle>
               <DialogDescription>Deslinde de responsabilidad de la plataforma.</DialogDescription>
@@ -124,7 +144,7 @@ export function SiteFooter() {
                 indebidos o perfiles falsos, podemos dar de baja el perfil sin aviso previo.
               </p>
             </div>
-          </DialogContent>
+            </DialogContent>
           </Dialog>
         </div>
       </div>

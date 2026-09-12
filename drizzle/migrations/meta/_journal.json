@@ -29,6 +29,13 @@
       "when": 1789245538064,
       "tag": "0003_support_multiple_portfolio_videos",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789245601976,
+      "tag": "0004_validate_feedback_email",
+      "breakpoints": true
     }
   ]
 }

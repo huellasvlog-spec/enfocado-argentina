@@ -188,7 +188,9 @@ function Panel() {
       return;
     }
     const previous = perfil?.portfolio_pdf_path;
-    const { error } = await supabase.from("photographers").upsert({ id: user.id, portfolio_pdf_path: path });
+    const { error } = await supabase
+      .from("photographers")
+      .upsert({ id: user.id, portfolio_pdf_path: path });
     if (error) {
       await supabase.storage.from("portfolio").remove([path]);
       setSubiendo(false);
@@ -312,15 +314,36 @@ function Panel() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="instagram">Instagram</Label>
-              <Input id="instagram" type="url" value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="https://instagram.com/tuusuario" />
+              <Input
+                id="instagram"
+                type="url"
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
+                placeholder="https://instagram.com/tuusuario"
+                maxLength={500}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="website">Sitio web personal</Label>
-              <Input id="website" type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://tusitio.com" />
+              <Input
+                id="website"
+                type="url"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="https://tusitio.com"
+                maxLength={500}
+              />
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="creative">Vimeo o Behance</Label>
-              <Input id="creative" type="url" value={creative} onChange={(e) => setCreative(e.target.value)} placeholder="https://vimeo.com/tuusuario" />
+              <Input
+                id="creative"
+                type="url"
+                value={creative}
+                onChange={(e) => setCreative(e.target.value)}
+                placeholder="https://vimeo.com/tuusuario"
+                maxLength={500}
+              />
             </div>
           </div>
 
@@ -351,10 +374,15 @@ function Panel() {
           <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
             <FileText className="h-4 w-4" />
             {perfil?.portfolio_pdf_path ? "Reemplazar PDF" : "Subir PDF"}
-            <input type="file" accept="application/pdf,.pdf" className="hidden" onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void subirPdf(file);
-            }} />
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void subirPdf(file);
+              }}
+            />
           </label>
         </section>
 

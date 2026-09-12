@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Download, ExternalLink, Globe, Instagram, MapPin, MessageCircle, Play } from "lucide-react";
+import { Download, Globe, Instagram, MapPin, MessageCircle, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { signPaths } from "@/lib/media";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -39,7 +39,9 @@ function Perfil() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("photographers")
-        .select("id, full_name, bio, province, services, price_text, whatsapp, avatar_url, video_urls, portfolio_pdf_path, instagram_url, website_url, creative_url")
+        .select(
+          "id, full_name, bio, province, services, price_text, whatsapp, avatar_url, video_urls, portfolio_pdf_path, instagram_url, website_url, creative_url",
+        )
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;
@@ -125,21 +127,39 @@ function Perfil() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   {perfil.instagram_url && (
                     <Button asChild variant="outline" size="icon">
-                      <a href={perfil.instagram_url} target="_blank" rel="noreferrer" aria-label="Ver Instagram" title="Instagram">
+                      <a
+                        href={perfil.instagram_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Ver Instagram"
+                        title="Instagram"
+                      >
                         <Instagram className="h-4 w-4" />
                       </a>
                     </Button>
                   )}
                   {perfil.website_url && (
                     <Button asChild variant="outline" size="icon">
-                      <a href={perfil.website_url} target="_blank" rel="noreferrer" aria-label="Visitar sitio web" title="Sitio web">
+                      <a
+                        href={perfil.website_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Visitar sitio web"
+                        title="Sitio web"
+                      >
                         <Globe className="h-4 w-4" />
                       </a>
                     </Button>
                   )}
                   {perfil.creative_url && (
                     <Button asChild variant="outline" size="icon">
-                      <a href={perfil.creative_url} target="_blank" rel="noreferrer" aria-label="Ver perfil de Vimeo o Behance" title="Vimeo o Behance">
+                      <a
+                        href={perfil.creative_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Ver perfil de Vimeo o Behance"
+                        title="Vimeo o Behance"
+                      >
                         <Play className="h-4 w-4" />
                       </a>
                     </Button>
