@@ -14,44 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      feedback_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+        }
+        Relationships: []
+      }
       photographers: {
         Row: {
           avatar_url: string | null
           bio: string
           created_at: string
+          creative_url: string | null
           full_name: string
           id: string
+          instagram_url: string | null
+          portfolio_pdf_path: string | null
           price_text: string
           province: string
           published: boolean
           services: string[]
           updated_at: string
+          video_url: string | null
+          website_url: string | null
           whatsapp: string
         }
         Insert: {
           avatar_url?: string | null
           bio?: string
           created_at?: string
+          creative_url?: string | null
           full_name?: string
           id: string
+          instagram_url?: string | null
+          portfolio_pdf_path?: string | null
           price_text?: string
           province?: string
           published?: boolean
           services?: string[]
           updated_at?: string
+          video_url?: string | null
+          website_url?: string | null
           whatsapp?: string
         }
         Update: {
           avatar_url?: string | null
           bio?: string
           created_at?: string
+          creative_url?: string | null
           full_name?: string
           id?: string
+          instagram_url?: string | null
+          portfolio_pdf_path?: string | null
           price_text?: string
           province?: string
           published?: boolean
           services?: string[]
           updated_at?: string
+          video_url?: string | null
+          website_url?: string | null
           whatsapp?: string
         }
         Relationships: []
