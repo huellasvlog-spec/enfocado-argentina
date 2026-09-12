@@ -77,11 +77,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Huellas Foto — Directorio de fotógrafos en Argentina" },
+      {
+        name: "description",
+        content: "Directorio para contratar fotógrafos y videógrafos en todo el país.",
+      },
+      { property: "og:title", content: "Huellas Foto" },
+      {
+        property: "og:description",
+        content: "Directorio para contratar fotógrafos y videógrafos en Argentina.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
