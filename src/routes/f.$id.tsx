@@ -1,0 +1,161 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { MapPin, MessageCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { signPaths } from "@/lib/media";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import { WhatsAppModal } from "@/components/WhatsAppModal";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
+export const Route = createFileRoute("/f/$id")({
+  head: () => ({
+    meta: [
+      { title: "Perfil de fotógrafo — Huellas Foto" },
+      {
+        name: "description",
+        content: "Mirá el portfolio, los servicios y la zona de trabajo de este fotógrafo.",
+      },
+      { property: "og:title", content: "Perfil de fotógrafo — Huellas Foto" },
+      { property: "og:description", content: "Portfolio, servicios y contacto por WhatsApp." },
+    ],
+  }),
+  component: Perfil,
+});
+
+function Perfil() {
+  const { id } = Route.useParams();
+  const [modal, setModal] = useState(false);
+  const [urls, setUrls] = useState<Record<string, string>>({});
+
+  const { data: perfil, isLoading } = useQuery({
+    queryKey: ["perfil-publico", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("photographers")
+        .select("id, full_name, bio, province, services, price_text, whatsapp, avatar_url")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: imagenes } = useQuery({
+    queryKey: ["portfolio-publico", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("portfolio_images")
+        .select("id, storage_path")
+        .eq("photographer_id", id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  useEffect(() => {
+    const paths = [
+      ...(imagenes ?? []).map((i) => i.storage_path),
+      ...(perfil?.avatar_url ? [perfil.avatar_url] : []),
+    ];
+    if (paths.length) void signPaths(paths).then(setUrls);
+  }, [imagenes, perfil]);
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+        {isLoading && <p className="text-sm text-muted-foreground">Cargando perfil…</p>}
+        {!isLoading && !perfil && (
+          <div className="rounded-xl border border-dashed border-border p-10 text-center">
+            <p className="text-sm text-muted-foreground">Este perfil no existe.</p>
+            <Button asChild variant="ghost" className="mt-3">
+              <Link to="/">Volver al inicio</Link>
+            </Button>
+          </div>
+        )}
+
+        {perfil && (
+          <>
+            <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-card sm:flex-row sm:items-center">
+              <div className="h-24 w-24 shrink-0 overflow-hidden rounded-full bg-muted">
+                {perfil.avatar_url && urls[perfil.avatar_url] ? (
+                  <img
+                    src={urls[perfil.avatar_url]}
+                    alt={`Foto de perfil de ${perfil.full_name}`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-2xl font-semibold text-muted-foreground">
+                    {(perfil.full_name || "?").charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold tracking-tight">{perfil.full_name}</h1>
+                <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4" /> {perfil.province || "Zona no informada"}
+                </p>
+                <p className="mt-2 text-sm font-medium">{perfil.price_text || "A consultar"}</p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {(perfil.services ?? []).map((s) => (
+                    <Badge key={s} variant="secondary">
+                      {s}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <Button size="lg" onClick={() => setModal(true)}>
+                <MessageCircle className="mr-2 h-5 w-5" /> Contactar por WhatsApp
+              </Button>
+            </div>
+
+            {perfil.bio && (
+              <section className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-card">
+                <h2 className="text-lg font-semibold">Sobre mí</h2>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                  {perfil.bio}
+                </p>
+              </section>
+            )}
+
+            <section className="mt-6">
+              <h2 className="text-lg font-semibold">Portfolio</h2>
+              {(imagenes ?? []).length === 0 ? (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Este fotógrafo todavía no cargó imágenes.
+                </p>
+              ) : (
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {(imagenes ?? []).map((img) => (
+                    <div key={img.id} className="overflow-hidden rounded-xl bg-muted">
+                      {urls[img.storage_path] && (
+                        <img
+                          src={urls[img.storage_path]}
+                          alt={`Trabajo de ${perfil.full_name}`}
+                          className="aspect-square w-full object-cover"
+                          loading="lazy"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <WhatsAppModal
+              open={modal}
+              onOpenChange={setModal}
+              nombre={perfil.full_name}
+              whatsapp={perfil.whatsapp ?? ""}
+            />
+          </>
+        )}
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
