@@ -28,6 +28,28 @@ export const externalLinksSchema = z.object({
   }, "Ingresá un enlace válido de Vimeo o Behance"),
 });
 
+export type ExternalLinkKind = "instagram" | "website" | "creative";
+
+export function normalizeExternalUrl(value: string, kind: ExternalLinkKind): string {
+  const trimmed = value.trim().replace(/^@/, "");
+  if (!trimmed) return "";
+
+  if (kind === "instagram" && !trimmed.includes(".") && !trimmed.includes("/")) {
+    return `https://instagram.com/${trimmed}`;
+  }
+
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  if (kind === "instagram") {
+    try {
+      const parsed = new URL(withProtocol);
+      if (!parsed.hostname.includes(".")) return `https://instagram.com/${trimmed}`;
+    } catch {
+      return `https://instagram.com/${trimmed}`;
+    }
+  }
+  return withProtocol;
+}
+
 function safeHost(value: string): string | null {
   try {
     return new URL(value).hostname.replace(/^www\./, "");
