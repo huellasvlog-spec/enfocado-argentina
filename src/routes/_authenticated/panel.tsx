@@ -169,10 +169,24 @@ function Panel() {
   }
 
   async function subirPortfolio(files: FileList) {
+    const actuales = (imagenes ?? []).length;
+    if (actuales >= MAX_IMAGENES) {
+      toast.error("Máximo 5 imágenes permitidas en el portfolio");
+      return;
+    }
+    const seleccionadas = Array.from(files);
+    if (actuales + seleccionadas.length > MAX_IMAGENES) {
+      toast.error("Máximo 5 imágenes permitidas en el portfolio");
+    }
+    const permitidas = seleccionadas.slice(0, MAX_IMAGENES - actuales);
     setSubiendo(true);
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} debe ser una imagen de hasta 10 MB.`);
+    for (const file of permitidas) {
+      if (!FORMATOS_IMAGEN.includes(file.type)) {
+        toast.error(`${file.name} debe ser JPG, PNG o WEBP.`);
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} supera los 5 MB permitidos.`);
         continue;
       }
       const path = `${user.id}/${Date.now()}-${file.name.replace(/\s/g, "-")}`;
