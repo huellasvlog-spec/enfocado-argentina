@@ -482,7 +482,7 @@ function Panel() {
             </label>
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
-            Máximo 5 imágenes. Formatos aceptados: JPG, PNG, WEBP. Peso máximo: 5 MB por imagen.
+            Formatos aceptados: JPG, PNG, WEBP. Máximo 5 imágenes de hasta 5 MB cada una.
           </p>
 
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">

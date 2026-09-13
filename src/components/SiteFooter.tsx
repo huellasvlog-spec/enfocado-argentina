@@ -2,7 +2,6 @@ import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { MessageSquareText } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,17 +37,30 @@ export function SiteFooter() {
       return;
     }
     setSending(true);
-    const { error } = await supabase.from("feedback_messages").insert(parsed.data);
-    setSending(false);
-    if (error) {
+    try {
+      const apiUrl = `${import.meta.env["VITE_SUPABASE_URL"]}/functions/v1/feedback-notify`;
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env["VITE_SUPABASE_ANON_KEY"] || import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"]}`,
+        },
+        body: JSON.stringify(parsed.data),
+      });
+      setSending(false);
+      if (!res.ok) {
+        toast.error("No pudimos enviar tu comentario. Intentá nuevamente.");
+        return;
+      }
+      setName("");
+      setEmail("");
+      setMessage("");
+      setFeedbackOpen(false);
+      toast.success("Gracias. Recibimos tu comentario.");
+    } catch {
+      setSending(false);
       toast.error("No pudimos enviar tu comentario. Intentá nuevamente.");
-      return;
     }
-    setName("");
-    setEmail("");
-    setMessage("");
-    setFeedbackOpen(false);
-    toast.success("Gracias. Recibimos tu comentario.");
   }
 
   return (

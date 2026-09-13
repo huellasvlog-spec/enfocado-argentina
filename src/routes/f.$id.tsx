@@ -36,19 +36,23 @@ function Perfil() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const { data: perfil, isLoading } = useQuery({
+  const { data: perfil, isLoading, isError } = useQuery({
     queryKey: ["perfil-publico", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("photographers")
-        .select(
-          "id, full_name, bio, province, services, price_text, whatsapp, contact_email, avatar_url, video_urls, portfolio_pdf_path, instagram_url, website_url, creative_url",
-        )
-        .eq("id", id)
-        .maybeSingle();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const query = supabase.from("photographers").select(
+        "id, full_name, bio, province, services, price_text, whatsapp, contact_email, avatar_url, video_urls, portfolio_pdf_path, instagram_url, website_url, creative_url",
+      );
+      if (isUuid) {
+        const { data, error } = await query.eq("id", id).maybeSingle();
+        if (error) throw error;
+        return data;
+      }
+      const { data, error } = await query.eq("id", id).maybeSingle();
       if (error) throw error;
       return data;
     },
+    retry: false,
   });
 
   const { data: imagenes } = useQuery({
@@ -88,7 +92,17 @@ function Perfil() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
         {isLoading && <p className="text-sm text-muted-foreground">Cargando perfil…</p>}
-        {!isLoading && !perfil && (
+        {isError && (
+          <div className="rounded-xl border border-dashed border-border p-10 text-center">
+            <p className="text-sm text-muted-foreground">
+              No pudimos cargar este perfil. Probá nuevamente en unos segundos.
+            </p>
+            <Button asChild variant="ghost" className="mt-3">
+              <Link to="/">Volver al inicio</Link>
+            </Button>
+          </div>
+        )}
+        {!isLoading && !isError && !perfil && (
           <div className="rounded-xl border border-dashed border-border p-10 text-center">
             <p className="text-sm text-muted-foreground">Este perfil no existe.</p>
             <Button asChild variant="ghost" className="mt-3">
