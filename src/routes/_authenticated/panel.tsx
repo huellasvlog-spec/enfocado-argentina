@@ -39,6 +39,9 @@ export const Route = createFileRoute("/_authenticated/panel")({
 
 type Imagen = { id: string; storage_path: string };
 
+const MAX_IMAGENES = 5;
+const FORMATOS_IMAGEN = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 function Panel() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
@@ -46,6 +49,7 @@ function Panel() {
   const [nombre, setNombre] = useState("");
   const [bio, setBio] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [provincia, setProvincia] = useState("");
   const [servicios, setServicios] = useState<string[]>([]);
   const [tarifa, setTarifa] = useState("");
@@ -89,6 +93,7 @@ function Panel() {
     setNombre(perfil.full_name ?? "");
     setBio(perfil.bio ?? "");
     setWhatsapp(perfil.whatsapp ?? "");
+    setContactEmail(perfil.contact_email ?? "");
     setProvincia(perfil.province ?? "");
     setServicios(perfil.services ?? []);
     setTarifa(perfil.price_text ?? "");
@@ -122,12 +127,18 @@ function Panel() {
       toast.error(links.error.issues[0]?.message ?? "Revisá los enlaces externos.");
       return;
     }
+    const email = contactEmail.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      toast.error("Revisá el email de contacto.");
+      return;
+    }
     setGuardando(true);
     const { error } = await supabase.from("photographers").upsert({
       id: user.id,
       full_name: nombre,
       bio,
       whatsapp,
+      contact_email: email || null,
       province: provincia,
       services: servicios,
       price_text: tarifa,
@@ -161,10 +172,24 @@ function Panel() {
   }
 
   async function subirPortfolio(files: FileList) {
+    const actuales = (imagenes ?? []).length;
+    if (actuales >= MAX_IMAGENES) {
+      toast.error("Máximo 5 imágenes permitidas en el portfolio");
+      return;
+    }
+    const seleccionadas = Array.from(files);
+    if (actuales + seleccionadas.length > MAX_IMAGENES) {
+      toast.error("Máximo 5 imágenes permitidas en el portfolio");
+    }
+    const permitidas = seleccionadas.slice(0, MAX_IMAGENES - actuales);
     setSubiendo(true);
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} debe ser una imagen de hasta 10 MB.`);
+    for (const file of permitidas) {
+      if (!FORMATOS_IMAGEN.includes(file.type)) {
+        toast.error(`${file.name} debe ser JPG, PNG o WEBP.`);
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} supera los 5 MB permitidos.`);
         continue;
       }
       const path = `${user.id}/${Date.now()}-${file.name.replace(/\s/g, "-")}`;
@@ -248,6 +273,17 @@ function Panel() {
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
                 placeholder="+54 9 11 5555 5555"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="ce">Email de contacto público</Label>
+              <Input
+                id="ce"
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="tunombre@email.com"
+                maxLength={255}
               />
             </div>
           </div>
@@ -420,21 +456,27 @@ function Panel() {
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Portfolio</h2>
+            <h2 className="text-lg font-semibold">
+              Portfolio ({(imagenes ?? []).length}/{MAX_IMAGENES})
+            </h2>
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
               <Upload className="h-4 w-4" />
               {subiendo ? "Subiendo…" : "Cargar imágenes"}
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 multiple
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.length) void subirPortfolio(e.target.files);
+                  e.currentTarget.value = "";
                 }}
               />
             </label>
           </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Máximo 5 imágenes. Formatos aceptados: JPG, PNG, WEBP. Peso máximo: 5 MB por imagen.
+          </p>
 
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {(imagenes ?? []).map((img) => (

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Download, Globe, Instagram, MapPin, MessageCircle, Play } from "lucide-react";
+import { Download, Globe, Instagram, Mail, MapPin, MessageCircle, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { signPaths } from "@/lib/media";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -42,7 +42,7 @@ function Perfil() {
       const { data, error } = await supabase
         .from("photographers")
         .select(
-          "id, full_name, bio, province, services, price_text, whatsapp, avatar_url, video_urls, portfolio_pdf_path, instagram_url, website_url, creative_url",
+          "id, full_name, bio, province, services, price_text, whatsapp, contact_email, avatar_url, video_urls, portfolio_pdf_path, instagram_url, website_url, creative_url",
         )
         .eq("id", id)
         .maybeSingle();
@@ -175,9 +175,18 @@ function Perfil() {
                   )}
                 </div>
               </div>
-              <Button size="lg" onClick={() => setModal(true)}>
-                <MessageCircle className="mr-2 h-5 w-5" /> Contactar por WhatsApp
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button size="lg" onClick={() => setModal(true)}>
+                  <MessageCircle className="mr-2 h-5 w-5" /> Contactar por WhatsApp
+                </Button>
+                {perfil.contact_email && (
+                  <Button asChild size="lg" variant="outline">
+                    <a href={`mailto:${perfil.contact_email}`}>
+                      <Mail className="mr-2 h-5 w-5" /> {perfil.contact_email}
+                    </a>
+                  </Button>
+                )}
+              </div>
             </div>
 
             {perfil.bio && (

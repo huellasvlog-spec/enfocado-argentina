@@ -1,18 +1,38 @@
-import { Megaphone } from "lucide-react";
+import { useEffect, useRef } from "react";
+
+declare global {
+  interface Window {
+    adsbygoogle?: unknown[];
+  }
+}
 
 export function AdPlaceholder({ format = "horizontal" }: { format?: "horizontal" | "sidebar" }) {
+  const pushed = useRef(false);
+
+  useEffect(() => {
+    if (pushed.current) return;
+    pushed.current = true;
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (error) {
+      console.error("[AdSense]", error);
+    }
+  }, []);
+
   return (
     <aside
-      aria-label="Espacio Publicitario / Google AdSense"
-      className={`flex items-center justify-center border border-dashed border-border bg-muted/45 text-center text-muted-foreground ${
-        format === "sidebar" ? "min-h-64 px-5 py-10" : "min-h-28 px-6 py-7"
-      }`}
+      aria-label="Espacio publicitario"
+      className={format === "sidebar" ? "min-h-64 w-full" : "min-h-28 w-full"}
     >
-      <div>
-        <Megaphone className="mx-auto h-5 w-5" aria-hidden="true" />
-        <p className="mt-2 text-xs font-semibold uppercase">Espacio Publicitario</p>
-        <p className="mt-1 text-xs">Google AdSense</p>
-      </div>
+      {/* banner lateral enfocado */}
+      <ins
+        className="adsbygoogle"
+        style={{ display: "block" }}
+        data-ad-client="ca-pub-9614874175146813"
+        data-ad-slot="8423948713"
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
     </aside>
   );
 }
