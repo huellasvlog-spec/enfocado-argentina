@@ -275,6 +275,17 @@ function Panel() {
                 placeholder="+54 9 11 5555 5555"
               />
             </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="ce">Email de contacto público</Label>
+              <Input
+                id="ce"
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="tunombre@email.com"
+                maxLength={255}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -445,21 +456,27 @@ function Panel() {
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Portfolio</h2>
+            <h2 className="text-lg font-semibold">
+              Portfolio ({(imagenes ?? []).length}/{MAX_IMAGENES})
+            </h2>
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
               <Upload className="h-4 w-4" />
               {subiendo ? "Subiendo…" : "Cargar imágenes"}
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 multiple
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.length) void subirPortfolio(e.target.files);
+                  e.currentTarget.value = "";
                 }}
               />
             </label>
           </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Máximo 5 imágenes. Formatos aceptados: JPG, PNG, WEBP. Peso máximo: 5 MB por imagen.
+          </p>
 
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {(imagenes ?? []).map((img) => (
