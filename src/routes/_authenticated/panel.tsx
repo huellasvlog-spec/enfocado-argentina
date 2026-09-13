@@ -124,12 +124,18 @@ function Panel() {
       toast.error(links.error.issues[0]?.message ?? "Revisá los enlaces externos.");
       return;
     }
+    const email = contactEmail.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      toast.error("Revisá el email de contacto.");
+      return;
+    }
     setGuardando(true);
     const { error } = await supabase.from("photographers").upsert({
       id: user.id,
       full_name: nombre,
       bio,
       whatsapp,
+      contact_email: email || null,
       province: provincia,
       services: servicios,
       price_text: tarifa,
