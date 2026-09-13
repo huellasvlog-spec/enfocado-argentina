@@ -62,7 +62,7 @@ function Panel() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
 
-  const { data: perfil } = useQuery({
+  const { data: perfil, isLoading: cargandoPerfil } = useQuery({
     queryKey: ["perfil", user.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -179,7 +179,8 @@ function Panel() {
     }
     const seleccionadas = Array.from(files);
     if (actuales + seleccionadas.length > MAX_IMAGENES) {
-      toast.error("Máximo 5 imágenes permitidas en el portfolio");
+      toast.error(`Máximo 5 imágenes en el portfolio. Ya tenés ${actuales} cargada(s).`);
+      return;
     }
     const permitidas = seleccionadas.slice(0, MAX_IMAGENES - actuales);
     setSubiendo(true);
@@ -256,6 +257,12 @@ function Panel() {
             </Link>
           </Button>
         </div>
+
+        {cargandoPerfil && (
+          <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-card">
+            <p className="text-sm text-muted-foreground">Cargando tus datos…</p>
+          </div>
+        )}
 
         <form
           onSubmit={guardar}
