@@ -70,7 +70,13 @@ function Panel() {
         .select("*")
         .eq("id", user.id)
         .maybeSingle();
-      if (error) throw error;
+      if (error) {
+        console.error("[panel] Error al cargar perfil:", error.code, error.message, error.details);
+        throw error;
+      }
+      if (!data) {
+        console.warn("[panel] No se encontró perfil para user.id:", user.id);
+      }
       return data;
     },
   });
@@ -148,7 +154,10 @@ function Panel() {
       creative_url: links.data.creative || null,
     });
     setGuardando(false);
-    if (error) toast.error("No se pudieron guardar los cambios.");
+    if (error) {
+      console.error("[panel] Error al guardar perfil:", error.code, error.message, error.details);
+      toast.error(`No se pudieron guardar los cambios: ${error.message}`);
+    }
     else {
       toast.success("Perfil actualizado.");
       void qc.invalidateQueries({ queryKey: ["perfil", user.id] });

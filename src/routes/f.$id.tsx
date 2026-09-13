@@ -39,17 +39,20 @@ function Perfil() {
   const { data: perfil, isLoading, isError } = useQuery({
     queryKey: ["perfil-publico", id],
     queryFn: async () => {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      const query = supabase.from("photographers").select(
-        "id, full_name, bio, province, services, price_text, whatsapp, contact_email, avatar_url, video_urls, portfolio_pdf_path, instagram_url, website_url, creative_url",
-      );
-      if (isUuid) {
-        const { data, error } = await query.eq("id", id).maybeSingle();
-        if (error) throw error;
-        return data;
+      const { data, error } = await supabase
+        .from("photographers")
+        .select(
+          "id, full_name, bio, province, services, price_text, whatsapp, contact_email, avatar_url, video_urls, portfolio_pdf_path, instagram_url, website_url, creative_url",
+        )
+        .eq("id", id)
+        .maybeSingle();
+      if (error) {
+        console.error("[perfil-publico] Error al cargar perfil:", error.code, error.message, error.details);
+        throw error;
       }
-      const { data, error } = await query.eq("id", id).maybeSingle();
-      if (error) throw error;
+      if (!data) {
+        console.warn("[perfil-publico] No se encontró fotógrafo con id:", id);
+      }
       return data;
     },
     retry: false,
