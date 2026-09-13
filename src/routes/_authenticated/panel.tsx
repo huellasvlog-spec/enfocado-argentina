@@ -46,6 +46,7 @@ function Panel() {
   const [nombre, setNombre] = useState("");
   const [bio, setBio] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [provincia, setProvincia] = useState("");
   const [servicios, setServicios] = useState<string[]>([]);
   const [tarifa, setTarifa] = useState("");
@@ -89,6 +90,7 @@ function Panel() {
     setNombre(perfil.full_name ?? "");
     setBio(perfil.bio ?? "");
     setWhatsapp(perfil.whatsapp ?? "");
+    setContactEmail(perfil.contact_email ?? "");
     setProvincia(perfil.province ?? "");
     setServicios(perfil.services ?? []);
     setTarifa(perfil.price_text ?? "");
