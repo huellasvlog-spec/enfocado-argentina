@@ -39,6 +39,9 @@ export const Route = createFileRoute("/_authenticated/panel")({
 
 type Imagen = { id: string; storage_path: string };
 
+const MAX_IMAGENES = 5;
+const FORMATOS_IMAGEN = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 function Panel() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
