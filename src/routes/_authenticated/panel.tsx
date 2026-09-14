@@ -296,6 +296,22 @@ function Panel() {
     toast.success("Portfolio PDF actualizado.");
   }
 
+  async function eliminarPdf() {
+    const path = perfil?.portfolio_pdf_path;
+    if (!path) return;
+    const { error } = await supabase
+      .from("photographers")
+      .upsert({ id: user.id, portfolio_pdf_path: null });
+    if (error) {
+      console.error("[panel] Error al eliminar PDF:", error.code, error.message);
+      toast.error("No se pudo eliminar el PDF.");
+      return;
+    }
+    await supabase.storage.from("portfolio").remove([path]);
+    toast.success("Portfolio PDF eliminado.");
+    void qc.invalidateQueries({ queryKey: ["perfil", user.id] });
+  }
+
   async function borrarImagen(img: Imagen) {
     await supabase.storage.from("portfolio").remove([img.storage_path]);
     await supabase.from("portfolio_images").delete().eq("id", img.id);
@@ -538,19 +554,47 @@ function Panel() {
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
           <h2 className="text-lg font-semibold">Portfolio PDF</h2>
           <p className="mt-1 text-sm text-muted-foreground">Subí un archivo PDF de hasta 10 MB.</p>
-          <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
-            <FileText className="h-4 w-4" />
-            {perfil?.portfolio_pdf_path ? "Reemplazar PDF" : "Subir PDF"}
-            <input
-              type="file"
-              accept="application/pdf,.pdf"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void subirPdf(file);
-              }}
-            />
-          </label>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
+              <FileText className="h-4 w-4" />
+              {perfil?.portfolio_pdf_path ? "Reemplazar PDF" : "Subir PDF"}
+              <input
+                type="file"
+                accept="application/pdf,.pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void subirPdf(file);
+                }}
+              />
+            </label>
+            {perfil?.portfolio_pdf_path && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" /> Eliminar PDF
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>¿Eliminar el portfolio PDF?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      El archivo se borrará del almacenamiento y tu perfil volverá al estado inicial. Esta acción no se puede deshacer.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => void eliminarPdf()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Sí, eliminar PDF
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </section>
 
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
