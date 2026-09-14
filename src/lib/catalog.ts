@@ -27,13 +27,14 @@ export const PROVINCIAS = [
 ] as const;
 
 export const SERVICIOS = [
-  "Fotografía",
-  "Edición",
-  "Video",
-  "Fotografía aérea / Drones",
-  "Eventos",
-  "Retratos",
-  "Producto",
+  "Sociales y Eventos",
+  "Fotografía de Producto y E-commerce",
+  "Retratos y Moda",
+  "Contenido para Redes y Reels",
+  "Fotografía Aérea / Drones",
+  "Publicidad y Marcas",
+  "Edición y Postproducción",
+  "Cobertura de Shows y Espectáculos",
 ] as const;
 
 export type Servicio = (typeof SERVICIOS)[number];

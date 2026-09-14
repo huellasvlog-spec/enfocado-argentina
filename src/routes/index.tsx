@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Search, MapPin } from "lucide-react";
+import { Search, MapPin, SearchCheck, Images, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PROVINCIAS, SERVICIOS } from "@/lib/catalog";
 import { signPaths } from "@/lib/media";
@@ -140,6 +140,39 @@ function Index() {
       </section>
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-10">
+        <section className="mb-8 rounded-2xl border border-border bg-card p-6 shadow-card">
+          <h2 className="text-lg font-semibold">¿Cómo funciona Enfocado?</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div className="flex flex-col items-start gap-2 rounded-xl bg-muted/50 p-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <SearchCheck className="h-5 w-5" />
+              </div>
+              <p className="text-sm font-medium">1. Buscá por zona o servicio</p>
+              <p className="text-xs text-muted-foreground">
+                Filtrá fotógrafos y realizadores por provincia y tipo de trabajo.
+              </p>
+            </div>
+            <div className="flex flex-col items-start gap-2 rounded-xl bg-muted/50 p-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Images className="h-5 w-5" />
+              </div>
+              <p className="text-sm font-medium">2. Explorá el portfolio</p>
+              <p className="text-xs text-muted-foreground">
+                Mirá fotos, videos, tarifas y servicios de cada profesional.
+              </p>
+            </div>
+            <div className="flex flex-col items-start gap-2 rounded-xl bg-muted/50 p-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <MessageCircle className="h-5 w-5" />
+              </div>
+              <p className="text-sm font-medium">3. Contactá directo, sin comisiones</p>
+              <p className="text-xs text-muted-foreground">
+                Coordiná por WhatsApp o email directamente con el profesional.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
             {isLoading ? "Cargando…" : `${lista.length} fotógrafos disponibles`}
