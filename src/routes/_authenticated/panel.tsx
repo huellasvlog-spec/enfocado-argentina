@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Trash2, Upload, ExternalLink, FileText, Camera } from "lucide-react";
+import { Trash2, Upload, ExternalLink, FileText, Camera, UserX, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { PROVINCIAS, SERVICIOS } from "@/lib/catalog";
 import { signPaths } from "@/lib/media";
@@ -22,6 +23,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/panel")({
   head: () => ({
@@ -45,6 +57,7 @@ const FORMATOS_IMAGEN = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 function Panel() {
   const { user } = Route.useRouteContext();
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const [nombre, setNombre] = useState("");
   const [bio, setBio] = useState("");
@@ -60,7 +73,9 @@ function Panel() {
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [eliminando, setEliminando] = useState(false);
 
   const { data: perfil, isLoading: cargandoPerfil } = useQuery({
     queryKey: ["perfil", user.id],
@@ -172,12 +187,46 @@ function Panel() {
     const path = `${user.id}/avatar-${Date.now()}-${file.name.replace(/\s/g, "-")}`;
     const { error } = await supabase.storage.from("portfolio").upload(path, file);
     if (error) {
+      console.error("[panel] Error al subir avatar:", error.code, error.message);
       toast.error("No se pudo subir la imagen.");
       return;
     }
     await supabase.from("photographers").upsert({ id: user.id, avatar_url: path });
     toast.success("Foto de perfil actualizada.");
     void qc.invalidateQueries({ queryKey: ["perfil", user.id] });
+  }
+
+  async function eliminarAvatar() {
+    if (!perfil?.avatar_url) return;
+    await supabase.storage.from("portfolio").remove([perfil.avatar_url]);
+    const { error } = await supabase
+      .from("photographers")
+      .upsert({ id: user.id, avatar_url: null });
+    if (error) {
+      console.error("[panel] Error al eliminar avatar:", error.code, error.message);
+      toast.error("No se pudo eliminar la foto.");
+      return;
+    }
+    toast.success("Foto de perfil eliminada.");
+    void qc.invalidateQueries({ queryKey: ["perfil", user.id] });
+  }
+
+  async function eliminarCuenta() {
+    setEliminando(true);
+    const { error } = await supabase
+      .from("photographers")
+      .delete()
+      .eq("id", user.id);
+    if (error) {
+      console.error("[panel] Error al eliminar cuenta:", error.code, error.message, error.details);
+      setEliminando(false);
+      toast.error("No se pudo eliminar la cuenta. Intentá nuevamente.");
+      return;
+    }
+    await supabase.auth.signOut();
+    setEliminando(false);
+    toast.success("Tu cuenta fue eliminada de Enfocado.");
+    navigate({ to: "/" });
   }
 
   async function subirPortfolio(files: FileList) {
@@ -419,36 +468,70 @@ function Panel() {
         <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-card">
           <h2 className="text-lg font-semibold">Foto de perfil o logo</h2>
           <div className="mt-3 flex items-center gap-4">
-            {perfil?.avatar_url && urls[perfil.avatar_url] && (
-              <img
-                src={urls[perfil.avatar_url]}
-                alt="Foto de perfil actual"
-                className="h-20 w-20 rounded-full object-cover ring-2 ring-border"
-              />
-            )}
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
-              <Camera className="h-4 w-4" />
-              Subir foto
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) setAvatarFile(f);
-                  e.currentTarget.value = "";
-                }}
-              />
-            </label>
+            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-muted ring-2 ring-border">
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt="Vista previa de foto de perfil"
+                  className="h-full w-full object-cover"
+                />
+              ) : perfil?.avatar_url && urls[perfil.avatar_url] ? (
+                <img
+                  src={urls[perfil.avatar_url]}
+                  alt="Foto de perfil actual"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center text-2xl font-semibold text-muted-foreground">
+                  {(nombre || "?").charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
+                <Camera className="h-4 w-4" />
+                {perfil?.avatar_url || avatarPreview ? "Cambiar foto" : "Subir foto"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setAvatarPreview(URL.createObjectURL(f));
+                      setAvatarFile(f);
+                    }
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
+              {(perfil?.avatar_url || avatarPreview) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAvatarPreview(null);
+                    if (perfil?.avatar_url) void eliminarAvatar();
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" /> Eliminar foto
+                </Button>
+              )}
+            </div>
           </div>
         </section>
 
         <AvatarCropper
           file={avatarFile}
-          onCancel={() => setAvatarFile(null)}
+          onCancel={() => {
+            setAvatarFile(null);
+            setAvatarPreview(null);
+          }}
           onConfirm={async (file) => {
             await subirAvatar(file);
             setAvatarFile(null);
+            setAvatarPreview(null);
           }}
         />
 
@@ -491,7 +574,7 @@ function Panel() {
             </label>
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
-            Formatos aceptados: JPG, PNG, WEBP. Máximo 5 imágenes de hasta 5 MB cada una.
+            Máximo 5 imágenes. Formatos: JPG, PNG, WEBP. Peso máximo: 5 MB por imagen.
           </p>
 
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -521,6 +604,43 @@ function Panel() {
           {(imagenes ?? []).length === 0 && (
             <p className="mt-4 text-sm text-muted-foreground">Todavía no cargaste imágenes.</p>
           )}
+        </section>
+
+        <section className="mt-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-destructive">Zona de peligro</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Al eliminar tu cuenta, tu perfil y portfolio se borrarán permanentemente de Enfocado. Esta acción no se puede deshacer.
+              </p>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="mt-4" disabled={eliminando}>
+                    <UserX className="h-4 w-4" />
+                    {eliminando ? "Eliminando…" : "Eliminar mi cuenta permanentemente"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>¿Eliminar tu cuenta?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta acción es irreversible. Se borrarán tu perfil, tus imágenes y tu portfolio PDF de la plataforma. No podrás recuperarlos.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => void eliminarCuenta()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Sí, eliminar mi cuenta
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
         </section>
       </main>
       <SiteFooter />

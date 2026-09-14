@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -48,10 +49,12 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [recordar, setRecordar] = useState(false);
   const [cargando, setCargando] = useState(false);
+  const [showPass, setShowPass] = useState(false);
 
   const [nombre, setNombre] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPass, setRegPass] = useState("");
+  const [showRegPass, setShowRegPass] = useState(false);
 
   const [olvide, setOlvide] = useState(false);
   const [mailReset, setMailReset] = useState("");
@@ -151,13 +154,24 @@ function AuthPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="pass">Contraseña</Label>
-                <Input
-                  id="pass"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="pass"
+                    type={showPass ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -211,13 +225,24 @@ function AuthPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="regpass">Contraseña</Label>
-                <Input
-                  id="regpass"
-                  type="password"
-                  required
-                  value={regPass}
-                  onChange={(e) => setRegPass(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="regpass"
+                    type={showRegPass ? "text" : "password"}
+                    required
+                    value={regPass}
+                    onChange={(e) => setRegPass(e.target.value)}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegPass((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showRegPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showRegPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={cargando}>
                 {cargando ? "Creando cuenta…" : "Crear cuenta"}
